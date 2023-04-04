@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(SoftBoneHub))]
+
+[CustomEditor(typeof(RopeHub))]
 public class SoftBoneHub_Editor : Editor
 {
-    SoftBoneHub hub;
+    RopeHub hub;
     private void OnEnable()
     {
-        hub = target as SoftBoneHub;
+        hub = target as RopeHub;
     }
+    /* 用于初始化一些 曲线，参数值 */
     public override bool RequiresConstantRepaint()
     {
         hub.InitEditor();
