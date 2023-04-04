@@ -17,61 +17,48 @@ namespace Mg.Cloth
     public class Rope
     {
         public Transform pivot;
-        public AnimationCurve bendCurve;        //弯曲度
-        public AnimationCurve dampCurve;        //衰减速度
-        public float damping = 0.1f;            // 会乘以0.1f
-        [Range(0.01f,10)] public float timeScale = 1f;
-        public float gravity = 9.8f;
-        public int bendDegree = 60;
-        public float radius = 0.3f;
-        public float physicsRadius = 0.5f;      //物理碰撞半径
+        public int attributeIdx = 0;
+        public int pairIdx = -1;
 
-        private float[] damps;                  //衰减速度
-        private float[] dists;                  //单轴-距离约束
-        private float[] bendCoss;               //弯曲-变形量 <Cos>  可改为各项异性
-        private float[] bendSins;
+        float timeScale = 1f;
+        float damping = 0.1f;            // 会乘以0.1f
+        float gravity = 9.8f;
+        int bendDegree = 60;
+        float radius = 0.3f;
+        float physicsRadius = 0.5f;      //物理碰撞半径
+        float stasis = 1f;
 
-        private Transform[] bones;
-        private Vector3[] initDirs;             //初始轴向 local-space
-        private Vector3[] nodes;                //节点-位置
-        private Vector3[] nodesOld;
-        private Vector3[] nodesTmp;
-        private float[] nodesTouch;              //在物理表面上
+        float[] damps;                  //衰减速度
+        float[] dists;                  //单轴-距离约束
+        float[] bendCoss;               //弯曲-变形量 <Cos>  可改为各项异性
+        float[] bendSins;
 
-        private float lastTick;
-        private int countNode;
-        private LayerMask mask;
+        Transform[] bones;
+        Vector3[] initDirs;             //初始轴向 local-space
+        Vector3[] nodes;                //节点-位置
+        Vector3[] nodesOld;
+        Vector3[] nodesTmp;
+        float[] nodesTouch;              //在物理表面上
 
-        private bool hasPair = false;
-        private Rope constrainPair;       //如果有的话
-        private float radiusB = 0;
-        private float diameterAB, sqrAB;
+        float lastTick;
+        int countNode;
+        LayerMask mask;
 
-        private float delayTouch = 1f;
+        bool hasPair = false;
+        Rope constrainPair;       //如果有的话
+
 #if UNITY_EDITOR
-        public void InitEditor()
-        {
-            if (pivot == null && dampCurve.keys.Length == 0)
-            {
-                dampCurve = AnimationCurve.Constant(0, 1, 1.0f);
-                bendCurve = AnimationCurve.Constant(0, 1, 1.0f);
-                damping = 1.0f;
-                bendDegree = 60;
-                radius = 0.3f;
-                physicsRadius = 0.5f;
-            }
-        }
-        /* 用于在Editor里 更新 Mass和 Bend */
-        public void Refresh_Damp_Bend()
+        /* 用于在Editor里 更新 Damp 和 Bend */
+        public void Refresh_Damp_Bend(RopeAttribute att)
         {
             float step = 1f / (countNode - 1);
             float t;
             for (int i = 1; i < countNode; i++)
             {
                 t = step * i;
-                damps[i] = (damping * 0.1f) * dampCurve.Evaluate(t);
+                damps[i] = (damping * 0.1f) * att.dampCurve.Evaluate(t);
 
-                float bendRad = bendDegree * bendCurve.Evaluate(t);
+                float bendRad = bendDegree * att.bendCurve.Evaluate(t);
                 bendCoss[i] = Mathf.Cos(Mathf.Deg2Rad * bendRad);
                 bendSins[i] = Mathf.Sin(Mathf.Deg2Rad * bendRad);
             }
@@ -83,22 +70,22 @@ namespace Mg.Cloth
                 return nodes[idx];
             return nodes[nodes.Length - 1];
         }
-        public void InitRuntime(LayerMask mask, Rope constrainPair)
+        public void InitRuntime(RopeAttribute att, LayerMask mask,Rope constrainPair)
         {
             lastTick = 0.1f;
-            timeScale = Mathf.Max(timeScale, 0.001f);
-            bendDegree = Mathf.Clamp(bendDegree, 10, 359);
+            timeScale = att.timeScale;
+            damping = att.damping;
+            gravity = att.gravity;
+            bendDegree = att.bendDegree;
+            radius = att.radius;
+            physicsRadius = att.physicsRadius;
+            stasis = att.physicsStasis;
 
             this.mask = mask;
-
             /* 平行约束 */
             hasPair = (null != constrainPair);
-            if (hasPair)
-            {
-                radiusB = constrainPair.radius;
-                diameterAB = radius + radiusB;
-                sqrAB = diameterAB * diameterAB;
-            }
+            this.constrainPair = constrainPair;
+
             countNode = 1;
             Transform testTr = pivot;
             while (testTr.childCount > 0)
@@ -138,10 +125,10 @@ namespace Mg.Cloth
                 nodesOld[i] = nodes[i];
                 dists[i] = (nodes[i] - bones[i - 1].position).magnitude;    //某个节点可能会有缩放，所以在world-space中计算
                 initDirs[i] = bones[i].localPosition.normalized;                //初始轴向-local
-                damps[i] = (damping*0.1f) * dampCurve.Evaluate(t);
+                damps[i] = (damping * 0.1f) * att.dampCurve.Evaluate(t);
                 nodesTouch[i] = 0;
 
-                float bendRad = bendDegree * bendCurve.Evaluate(t);
+                float bendRad = bendDegree * att.bendCurve.Evaluate(t);
                 bendCoss[i] = Mathf.Cos(Mathf.Deg2Rad * bendRad);
                 bendSins[i] = Mathf.Sin(Mathf.Deg2Rad * bendRad);
             }
@@ -200,17 +187,18 @@ namespace Mg.Cloth
                 float proj = Mathf.Sqrt(1 - dot * dot);
                 /* 加速度  大小 */
                 float deltaSpd = gravity * proj * tick;
- 
+
                 /* 加速度  切方向 */
                 Vector3 planarVec = Vector3.Cross(axis, dirForce);
                 Vector3 tanForce = Vector3.Cross(planarVec, axis).normalized;
 
                 vecOld = pos - nodesOld[i];
                 /* 合成速度 */
-                Vector3 deltaMv = vecOld / lastTick*tick  + (tanForce * deltaSpd*tick  * 0.5f);
+                Vector3 deltaMv = vecOld / lastTick * tick + (tanForce * deltaSpd * tick * 0.5f);
+ 
                 float mag = deltaMv.magnitude;
                 float damp = 1 - Mathf.Clamp(damps[i] * mag / tick, 0, 0.9999f);//防止出现负值
-                deltaMv = deltaMv *damp;
+                deltaMv = deltaMv * damp;
 
                 pos = pos + deltaMv;
                 virDir = (pos - nodes[i - 1]).normalized;
@@ -219,16 +207,13 @@ namespace Mg.Cloth
                 /* 平行约束 */
                 if (hasPair)
                 {
-                    Vector3 pairPos = constrainPair.ParallelNode(i);
-                    Vector3 vecBA = pairPos - pos;
-                    float sqr = vecBA.sqrMagnitude;
-                    if (sqr < sqrAB)
+                    bool isIntersect = false;
+                    Vector3 vecInter = constrainPair.TestIntersect(pos, radius, ref isIntersect);
+                    if (isIntersect)
                     {
-                        float distBA = Mathf.Sqrt(sqr);
-                        Vector3 dirBA = vecBA / distBA;
-                        pos = pairPos + dirBA * diameterAB;   //平行约束
-
+                        pos = pos + vecInter;
                         virDir = (pos - nodes[i - 1]).normalized;//修正 虚方向
+                        pos = nodes[i - 1] + virDir * dists[i];
                     }
                 }
                 /* 弯曲约束 */
@@ -277,7 +262,7 @@ namespace Mg.Cloth
                 }
                 if (isHit)
                 {
-                    nodesTouch[i] = delayTouch;
+                    nodesTouch[i] = stasis;
                 }
                 if (!isHit) continue;
 
@@ -285,24 +270,86 @@ namespace Mg.Cloth
                 //cpPos = nodes[i - 1] + virDir * dists[i];                       //距离钳制的 临时位置
                 //nodes[i] = cpPos;   //最终的位置
                 nodes[i] = virPos;
-
             }
         }
-#if UNITY_EDITOR
-        public void OnDrawGizoms()
+
+        Vector3 TestIntersect(Vector3 pos, float radiusB,ref bool isIntersect)
         {
-            if (nodes == null) return;
-            Gizmos.color = Color.red;
+            isIntersect = false;
+            float diameterAB = radius + radiusB;
+            float sqrAB = diameterAB * diameterAB;
+
+            Vector3 pairPos;
+            Vector3 vec;
+            Vector3 delta = Vector3.zero;
             for (int i = 0; i < countNode; i++)
             {
-                Vector3 vec = nodes[i] - nodesOld[i];
-                if (vec.sqrMagnitude > 1e10)
+                pairPos = nodes[i];
+                vec = pos - pairPos;
+                float sqr = vec.sqrMagnitude;
+                if (sqr < sqrAB)
                 {
-                    vec.Normalize();
-                    Gizmos.DrawLine(nodes[i], nodes[i] + vec * 0.5f);
+                    isIntersect = true;
+                    float distAB = Mathf.Sqrt(sqr);
+                    //Vector3 dirBA = vec / distAB;
+                    //return dirBA * (diameterAB - distAB);
+                    if (distAB < 1e-4f)
+                    {
+                        delta += vec;
+                    }
+                    else
+                    {
+                        delta = delta + vec * ((diameterAB / distAB) - 1);
+                    }
                 }
-                if (i > 0)
-                    Gizmos.DrawLine(nodes[i], nodes[i - 1]);
+            }
+            return delta;
+        }
+#if UNITY_EDITOR
+        public void OnDrawGizoms(RopeAttribute att,Rope pair)
+        {
+            if (pivot == null) return;
+            Color line = new Color(1, 0, 0, 0.7f);
+            Color sphere = new Color(0.6f, 0.6f, 0.6f, 0.5f);
+            Color constrain = new Color(0, 1, 1, 0.5f);
+
+            Transform testPair = null;
+            if (pair != null)
+            {
+                testPair = pair.pivot;
+            }
+
+            Transform testTr = pivot;
+            while (testTr.childCount > 0)
+            {
+                Transform tmp = testTr.GetChild(0);
+                Vector3 p0 = testTr.position;
+                Vector3 p1 = tmp.position;
+
+                Gizmos.color = line;
+                Gizmos.DrawLine(p1, p0);
+                Gizmos.color = sphere;
+                Gizmos.DrawWireSphere(p1, att.radius);
+                //平行约束
+                if (testPair != null)
+                {
+                    Gizmos.color = constrain;
+                    Vector3 pPair = testPair.position;
+                    Gizmos.DrawLine(p0, p0 + (p0 - pPair).normalized * att.radius * 3f);
+                    if (testPair.childCount > 0)
+                        testPair = testPair.GetChild(0);
+                    else
+                        testPair = null;
+                }
+                testTr = tmp;
+
+            }
+            if (testPair != null)
+            {
+                Gizmos.color =constrain;
+                Vector3 p0 = testTr.position;
+                Vector3 pPair = testPair.position;
+                Gizmos.DrawLine(p0, p0 + (p0 - pPair).normalized * att.radius * 3f);
             }
         }
 #endif

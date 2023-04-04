@@ -443,14 +443,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8218412ad07af64ea54de18033e88f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  links:
-  - pivot: {fileID: 5385956228755375910}
-    bendCurve:
+  attributes:
+  - bendCurve:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 1
+        value: 0.8
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -477,7 +476,7 @@ MonoBehaviour:
         value: 1
         inSlope: 0
         outSlope: 0
-        tangentMode: 34
+        tangentMode: 0
         weightedMode: 0
         inWeight: 0
         outWeight: 0
@@ -486,7 +485,7 @@ MonoBehaviour:
         value: 1
         inSlope: 0
         outSlope: 0
-        tangentMode: 34
+        tangentMode: 0
         weightedMode: 0
         inWeight: 0
         outWeight: 0
@@ -496,9 +495,12 @@ MonoBehaviour:
     damping: 0.05
     timeScale: 1
     gravity: 10
-    bendDegree: 60
+    bendDegree: 80
     radius: 0.3
     physicsRadius: 0.5
+  links:
+  - pivot: {fileID: 5385956228755375910}
+    attributeIdx: 0
   physicsLayer:
     serializedVersion: 2
     m_Bits: 1
