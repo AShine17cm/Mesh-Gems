@@ -5,16 +5,10 @@ using UnityEngine;
 namespace Mg.Cloth
 {
     /*
-     单轴-单层(嵌套子节点)，具有平行约束, 最大弯曲度(柔性)约束
-     1-2-3-4
-     1-2-3-4 (平行约束)
-     1-
-       2-
-          3-
-            4-
+     相对Rope 添加了硬度，用于做 应力的平衡，方便做特殊造型
      */
     [Serializable]
-    public class Rope
+    public class Tail
     {
         public Transform pivot;
         public int attributeIdx = 0;
@@ -30,6 +24,7 @@ namespace Mg.Cloth
         float[] dists;                  //单轴-距离约束
         float[] bendCoss;               //弯曲-变形量 <Cos>  可改为各项异性
         float[] bendSins;
+        float[] stiffs;
 
         Transform[] bones;
         Vector3[] initDirs;             //初始轴向 local-space
@@ -43,11 +38,11 @@ namespace Mg.Cloth
         LayerMask mask;
 
         bool hasPair = false;
-        Rope constrainPair;       //如果有的话
+        Tail constrainPair;       //如果有的话
 
 #if UNITY_EDITOR
         /* 用于在Editor里 更新 Damp 和 Bend */
-        public void Refresh_Damp_Bend(RopeAttribute att)
+        public void Refresh_Damp_Bend(TailAttribute att)
         {
             timeScale = att.timeScale;
             gravity = att.gravity;
@@ -61,7 +56,7 @@ namespace Mg.Cloth
                 t = step * i;
                 damps[i] = (att.damping * 0.1f) * att.dampCurve.Evaluate(t);
 
-                float bendRad = att.bendDegree * att.bendCurve.Evaluate(t);
+                float bendRad =att.bendDegree * att.bendCurve.Evaluate(t);
                 bendCoss[i] = Mathf.Cos(Mathf.Deg2Rad * bendRad);
                 bendSins[i] = Mathf.Sin(Mathf.Deg2Rad * bendRad);
             }
@@ -73,7 +68,7 @@ namespace Mg.Cloth
                 return nodes[idx];
             return nodes[nodes.Length - 1];
         }
-        public void InitRuntime(RopeAttribute att, LayerMask mask,Rope constrainPair)
+        public void InitRuntime(TailAttribute att, LayerMask mask, Tail constrainPair)
         {
             lastTick = 0.1f;
             timeScale = att.timeScale;
@@ -99,6 +94,7 @@ namespace Mg.Cloth
             dists = new float[countNode];
             bendCoss = new float[countNode];
             bendSins = new float[countNode];
+            stiffs = new float[countNode];
 
             bones = new Transform[countNode];
             nodes = new Vector3[countNode];
@@ -116,6 +112,7 @@ namespace Mg.Cloth
             damps[0] = 0;
             bendCoss[0] = 1;
             bendSins[0] = 0;
+            stiffs[0] =att.stiffness* att.stiffCurve.Evaluate(0);
             float step = 1f / (countNode - 1);
             float t;
             for (int i = 1; i < countNode; i++)
@@ -132,6 +129,7 @@ namespace Mg.Cloth
                 float bendRad = att.bendDegree * att.bendCurve.Evaluate(t);
                 bendCoss[i] = Mathf.Cos(Mathf.Deg2Rad * bendRad);
                 bendSins[i] = Mathf.Sin(Mathf.Deg2Rad * bendRad);
+                stiffs[i] = att.stiffness * att.stiffCurve.Evaluate(t);
             }
         }
         /* World Space
@@ -184,8 +182,9 @@ namespace Mg.Cloth
 
                 /* 加速度 在切线上的投影 */
                 Vector3 axis = (pos - nodes[i - 1]).normalized;//需要重新计算
-                float dot = Vector3.Dot(axis, dirForce);
-                float proj = Mathf.Sqrt(1 - dot * dot);
+                float dot = Vector3.Dot(axis, dirForce);        //cos +/-
+                float proj = Mathf.Sqrt(1 - dot * dot);         //sin
+                proj = Mathf.Clamp(proj - dot * stiffs[i], 0, proj);//与力（重力）方向“一致”时,应力平衡
                 /* 加速度  大小 */
                 float deltaSpd = gravity * proj * tick;
 
@@ -196,7 +195,7 @@ namespace Mg.Cloth
                 vecOld = pos - nodesOld[i];
                 /* 合成速度 */
                 Vector3 deltaMv = vecOld / lastTick * tick + (tanForce * deltaSpd * tick * 0.5f);
- 
+
                 float mag = deltaMv.magnitude;
                 float damp = 1 - Mathf.Clamp(damps[i] * mag / tick, 0, 0.9999f);//防止出现负值
                 deltaMv = deltaMv * damp;
@@ -274,7 +273,7 @@ namespace Mg.Cloth
             }
         }
 
-        Vector3 TestIntersect(Vector3 pos, float radiusB,ref bool isIntersect)
+        Vector3 TestIntersect(Vector3 pos, float radiusB, ref bool isIntersect)
         {
             isIntersect = false;
             float diameterAB = radius + radiusB;
@@ -307,7 +306,7 @@ namespace Mg.Cloth
             return delta;
         }
 #if UNITY_EDITOR
-        public void OnDrawGizoms(RopeAttribute att,Rope pair)
+        public void OnDrawGizoms(TailAttribute att, Tail pair)
         {
             if (pivot == null) return;
             Color line = new Color(1, 0, 0, 0.7f);
@@ -347,7 +346,7 @@ namespace Mg.Cloth
             }
             if (testPair != null)
             {
-                Gizmos.color =constrain;
+                Gizmos.color = constrain;
                 Vector3 p0 = testTr.position;
                 Vector3 pPair = testPair.position;
                 Gizmos.DrawLine(p0, p0 + (p0 - pPair).normalized * att.radius * 3f);
