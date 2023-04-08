@@ -398,7 +398,6 @@ MonoBehaviour:
     damping: 0.05
     timeScale: 1
     gravity: 10
-    radius: 0.3
     physicsRadius: 0.5
     physicsStasis: 1
   links:
@@ -1111,41 +1110,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: ex_tail_1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
-        type: 3}
-      propertyPath: attributes.Array.data[0].adjacentDegree
-      value: 80
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
-        type: 3}
-      propertyPath: attributes.Array.data[0].adjacentCurve.m_Curve.Array.size
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
-        type: 3}
-      propertyPath: attributes.Array.data[0].adjacentCurve.m_Curve.Array.data[1].time
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
-        type: 3}
-      propertyPath: attributes.Array.data[0].adjacentCurve.m_Curve.Array.data[0].value
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
-        type: 3}
-      propertyPath: attributes.Array.data[0].adjacentCurve.m_Curve.Array.data[1].value
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
-        type: 3}
-      propertyPath: attributes.Array.data[0].adjacentCurve.m_Curve.Array.data[0].tangentMode
-      value: 34
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
-        type: 3}
-      propertyPath: attributes.Array.data[0].adjacentCurve.m_Curve.Array.data[1].tangentMode
-      value: 34
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 35b5986369d2e5644961ed8314400926, type: 3}

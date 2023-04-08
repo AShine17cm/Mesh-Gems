@@ -482,6 +482,30 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
+    adjacentCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
     dampCurve:
       serializedVersion: 2
       m_Curve:
@@ -506,6 +530,13 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
+    bendDegree: 80
+    adjacentDegree: 80
+    damping: 0.05
+    timeScale: 1
+    gravity: 10
+    physicsRadius: 0.5
+    physicsStasis: 0
     stiffCurve:
       serializedVersion: 2
       m_Curve:
@@ -530,22 +561,14 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    damping: 0.05
-    bendDegree: 80
     stiffness: 5
-    timeScale: 1
-    gravity: 10
-    radius: 0.3
-    physicsRadius: 0.5
-    physicsStasis: 0
   links:
   - pivot: {fileID: 6598933593218695466}
     attributeIdx: 0
-    pairIdx: -1
+  constrainPairs: []
   physicsLayer:
     serializedVersion: 2
-    m_Bits: 0
-  refreshParameters: 0
+    m_Bits: 1
 --- !u!1 &6598933593123673362
 GameObject:
   m_ObjectHideFlags: 0
