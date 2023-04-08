@@ -388,6 +388,30 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
+    adjacentCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
     dampCurve:
       serializedVersion: 2
       m_Curve:
@@ -412,15 +436,18 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
+    bendDegree: 120
+    adjacentDegree: 90
     damping: 0.1
     timeScale: 1
     gravity: 10
-    bendDegree: 80
     radius: 0.3
     physicsRadius: 0.5
+    physicsStasis: 1
   links:
   - pivot: {fileID: 8501164382180527769}
     attributeIdx: 0
+    pairIdx: -1
   physicsLayer:
     serializedVersion: 2
     m_Bits: 1

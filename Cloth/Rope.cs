@@ -14,44 +14,43 @@ namespace Mg.Cloth
             4-
      */
     [Serializable]
-    public class Rope
+    public partial class Rope
     {
         public Transform pivot;
         public int attributeIdx = 0;
-        public int pairIdx = -1;
 
-        float timeScale = 1f;
-        float gravity = 9.8f;
-        float radius = 0.3f;
-        float physicsRadius = 0.5f;      //物理碰撞半径
-        float stasis = 1f;
+        protected float timeScale = 1f;
+        protected float gravity = 10f;
+        //protected float radius = 0.3f;
+        protected float physicsRadius = 0.5f;      //物理碰撞半径
+        protected float stasis = 1f;
 
-        float[] damps;                  //衰减速度
-        float[] dists;                  //单轴-距离约束
-        float[] bendCoss;               //弯曲-变形量 <Cos>  可改为各项异性
-        float[] bendSins;
+        protected float[] damps;                  //衰减速度
+        protected float[] dists;                  //单轴-距离约束
+        protected float[] bendCoss;               //弯曲-变形量 <Cos>  可改为各项异性
+        protected float[] bendSins;
+        protected float[] adjCoss;
+        protected float[] adjSins;
 
-        Transform[] bones;
-        Vector3[] initDirs;             //初始轴向 local-space
-        Vector3[] nodes;                //节点-位置
-        Vector3[] nodesOld;
-        Vector3[] nodesTmp;
-        float[] nodesTouch;              //在物理表面上
+        protected Transform[] bones;
+        protected Vector3[] initDirs;             //初始轴向 local-space
+        protected Vector3[] nodes;                //节点-位置
+        protected Vector3[] nodesOld;
+        protected Vector3[] nodesTmp;
+        protected Vector3[] constrains;
+        protected float[] nodesTouch;              //在物理表面上, 计时长度
 
-        float lastTick;
-        int countNode;
-        LayerMask mask;
-
-        bool hasPair = false;
-        Rope constrainPair;       //如果有的话
+        protected float lastTick;
+        protected int countNode;
+        protected LayerMask mask;
 
 #if UNITY_EDITOR
         /* 用于在Editor里 更新 Damp 和 Bend */
-        public void Refresh_Damp_Bend(RopeAttribute att)
+        public virtual void Refresh_Damp_Bend(RopeAttribute att)
         {
             timeScale = att.timeScale;
             gravity = att.gravity;
-            radius = att.radius;
+            //radius = att.radius;
             physicsRadius = att.physicsRadius;
             stasis = att.physicsStasis;
             float step = 1f / (countNode - 1);
@@ -67,26 +66,16 @@ namespace Mg.Cloth
             }
         }
 #endif
-        public Vector3 ParallelNode(int idx)    //平行的节点
-        {
-            if (idx < nodes.Length)
-                return nodes[idx];
-            return nodes[nodes.Length - 1];
-        }
-        public void InitRuntime(RopeAttribute att, LayerMask mask,Rope constrainPair)
+        public virtual void InitRuntime(RopeAttribute att, LayerMask mask, Rope constrainPair)
         {
             lastTick = 0.1f;
             timeScale = att.timeScale;
             gravity = att.gravity;
-            radius = att.radius;
+            //radius = att.radius;
             physicsRadius = att.physicsRadius;
             stasis = att.physicsStasis;
 
             this.mask = mask;
-            /* 平行约束 */
-            hasPair = (null != constrainPair);
-            this.constrainPair = constrainPair;
-
             countNode = 1;
             Transform testTr = pivot;
             while (testTr.childCount > 0)
@@ -99,12 +88,15 @@ namespace Mg.Cloth
             dists = new float[countNode];
             bendCoss = new float[countNode];
             bendSins = new float[countNode];
+            adjCoss = new float[countNode];
+            adjSins = new float[countNode];
 
             bones = new Transform[countNode];
             nodes = new Vector3[countNode];
             nodesOld = new Vector3[countNode];
             nodesTmp = new Vector3[countNode];
             initDirs = new Vector3[countNode];
+            constrains = new Vector3[countNode];
             nodesTouch = new float[countNode];
 
             bones[0] = pivot;   //第一个节点
@@ -116,6 +108,9 @@ namespace Mg.Cloth
             damps[0] = 0;
             bendCoss[0] = 1;
             bendSins[0] = 0;
+            adjCoss[0] = 1;
+            adjSins[0] = 1;
+
             float step = 1f / (countNode - 1);
             float t;
             for (int i = 1; i < countNode; i++)
@@ -129,9 +124,19 @@ namespace Mg.Cloth
                 damps[i] = (att.damping * 0.1f) * att.dampCurve.Evaluate(t);
                 nodesTouch[i] = 0;
 
-                float bendRad = att.bendDegree * att.bendCurve.Evaluate(t);
-                bendCoss[i] = Mathf.Cos(Mathf.Deg2Rad * bendRad);
-                bendSins[i] = Mathf.Sin(Mathf.Deg2Rad * bendRad);
+                float bendRad = Mathf.Deg2Rad * att.bendDegree * att.bendCurve.Evaluate(t);
+                bendCoss[i] = Mathf.Cos(bendRad);
+                bendSins[i] = Mathf.Sin(bendRad);
+                float adjRad = Mathf.Deg2Rad * att.adjacentDegree * att.adjacentCurve.Evaluate(t);
+                adjCoss[i] = Mathf.Cos(adjRad);
+                adjSins[i] = Mathf.Sin(adjRad);
+            }
+        }
+        public void ClearConstrains()
+        {
+            for (int i = 0; i < countNode; i++)
+            {
+                constrains[i] = Vector3.zero;
             }
         }
         /* World Space
@@ -151,7 +156,6 @@ namespace Mg.Cloth
             {
                 SimulatePhysics();
             }
-
             /* 应用计算结果 到骨骼节点 */
             for (int i = 1; i < countNode; i++)
             {
@@ -162,12 +166,13 @@ namespace Mg.Cloth
             lastTick = tick;
         }
         /* 做一次模拟运算 */
-        void Simulate(Vector3 dirForce, float tick)
+        public virtual void Simulate(Vector3 dirForce, float tick)
         {
             Vector3 pos;
-            Vector3 virDir;
+            Vector3 virAxis;
             Vector3 init_wldDir;
             Vector3 vecOld;
+            Vector3 preAxis = (nodes[1] - nodes[0]).normalized;
 
             for (int i = 1; i < countNode; i++)
             {
@@ -176,8 +181,8 @@ namespace Mg.Cloth
                 nodesTouch[i] -= tick;
                 if (nodesTouch[i] >= 0)
                 {
-                    virDir = (pos - nodes[i - 1]).normalized;
-                    pos = nodes[i - 1] + virDir * dists[i];
+                    virAxis = (pos - nodes[i - 1]).normalized;
+                    pos = nodes[i - 1] + virAxis * dists[i];
                     nodes[i] = pos;
                     continue;
                 }
@@ -196,39 +201,41 @@ namespace Mg.Cloth
                 vecOld = pos - nodesOld[i];
                 /* 合成速度 */
                 Vector3 deltaMv = vecOld / lastTick * tick + (tanForce * deltaSpd * tick * 0.5f);
- 
+
                 float mag = deltaMv.magnitude;
                 float damp = 1 - Mathf.Clamp(damps[i] * mag / tick, 0, 0.9999f);//防止出现负值
                 deltaMv = deltaMv * damp;
 
-                pos = pos + deltaMv;
-                virDir = (pos - nodes[i - 1]).normalized;
-                pos = nodes[i - 1] + virDir * dists[i];
+                deltaMv += constrains[i];//xxxxx
 
-                /* 平行约束 */
-                if (hasPair)
-                {
-                    bool isIntersect = false;
-                    Vector3 vecInter = constrainPair.TestIntersect(pos, radius, ref isIntersect);
-                    if (isIntersect)
-                    {
-                        pos = pos + vecInter;
-                        virDir = (pos - nodes[i - 1]).normalized;//修正 虚方向
-                        pos = nodes[i - 1] + virDir * dists[i];
-                    }
-                }
+                pos = pos + deltaMv;
+                virAxis = (pos - nodes[i - 1]).normalized;
+                pos = nodes[i - 1] + virAxis * dists[i];
+
                 /* 弯曲约束 */
                 init_wldDir = bones[i - 1].TransformDirection(initDirs[i]);
-                float dotBend = Vector3.Dot(init_wldDir, virDir);
-                if (dotBend < bendCoss[i])
+                float dot_init = Vector3.Dot(init_wldDir, virAxis);
+                if (dot_init < bendCoss[i])
                 {
-                    Vector3 planarDir = Vector3.Cross(init_wldDir, virDir);
-                    Vector3 init_wldDir_X = Vector3.Cross(planarDir, init_wldDir);
-                    init_wldDir_X.Normalize();
-                    virDir = init_wldDir * bendCoss[i] + init_wldDir_X * bendSins[i];
-                    pos = nodes[i - 1] + virDir * dists[i];
+                    Vector3 planar = Vector3.Cross(init_wldDir, virAxis);
+                    Vector3 tan = Vector3.Cross(planar, init_wldDir);
+                    tan.Normalize();
+                    virAxis = init_wldDir * bendCoss[i] + tan * bendSins[i];
+                    pos = nodes[i - 1] + virAxis * dists[i];
                 }
+                /* 与前一个轴的角度 */
+                float dot_preAxis = Vector3.Dot(preAxis, virAxis);
+                if (dot_preAxis < adjCoss[i])
+                {
+                    Vector3 planar = Vector3.Cross(preAxis, virAxis);
+                    Vector3 tan = Vector3.Cross(planar, preAxis);
+                    tan.Normalize();
+                    virAxis = preAxis * adjCoss[i] + tan * adjSins[i];
+                    pos = nodes[i - 1] + virAxis * dists[i];
+                }
+
                 nodes[i] = pos;   //最终的位置
+                preAxis = virAxis;
             }
 
         }
@@ -273,41 +280,8 @@ namespace Mg.Cloth
                 nodes[i] = virPos;
             }
         }
-
-        Vector3 TestIntersect(Vector3 pos, float radiusB,ref bool isIntersect)
-        {
-            isIntersect = false;
-            float diameterAB = radius + radiusB;
-            float sqrAB = diameterAB * diameterAB;
-
-            Vector3 pairPos;
-            Vector3 vec;
-            Vector3 delta = Vector3.zero;
-            for (int i = 0; i < countNode; i++)
-            {
-                pairPos = nodes[i];
-                vec = pos - pairPos;
-                float sqr = vec.sqrMagnitude;
-                if (sqr < sqrAB)
-                {
-                    isIntersect = true;
-                    float distAB = Mathf.Sqrt(sqr);
-                    //Vector3 dirBA = vec / distAB;
-                    //return dirBA * (diameterAB - distAB);
-                    if (distAB < 1e-4f)
-                    {
-                        delta += vec;
-                    }
-                    else
-                    {
-                        delta = delta + vec * ((diameterAB / distAB) - 1);
-                    }
-                }
-            }
-            return delta;
-        }
 #if UNITY_EDITOR
-        public void OnDrawGizoms(RopeAttribute att,Rope pair)
+        public void OnDrawGizoms(RopeAttribute att, Rope pair)
         {
             if (pivot == null) return;
             Color line = new Color(1, 0, 0, 0.7f);
@@ -329,14 +303,14 @@ namespace Mg.Cloth
 
                 Gizmos.color = line;
                 Gizmos.DrawLine(p1, p0);
-                Gizmos.color = sphere;
-                Gizmos.DrawWireSphere(p1, att.radius);
+                //Gizmos.color = sphere;
+                //Gizmos.DrawWireSphere(p1, att.physicsRadius);
                 //平行约束
                 if (testPair != null)
                 {
                     Gizmos.color = constrain;
                     Vector3 pPair = testPair.position;
-                    Gizmos.DrawLine(p0, p0 + (p0 - pPair).normalized * att.radius * 3f);
+                    Gizmos.DrawLine(p0, p0 + (p0 - pPair).normalized * att.physicsRadius);
                     if (testPair.childCount > 0)
                         testPair = testPair.GetChild(0);
                     else
@@ -347,10 +321,10 @@ namespace Mg.Cloth
             }
             if (testPair != null)
             {
-                Gizmos.color =constrain;
+                Gizmos.color = constrain;
                 Vector3 p0 = testTr.position;
                 Vector3 pPair = testPair.position;
-                Gizmos.DrawLine(p0, p0 + (p0 - pPair).normalized * att.radius * 3f);
+                Gizmos.DrawLine(p0, p0 + (p0 - pPair).normalized * att.physicsRadius);
             }
         }
 #endif
