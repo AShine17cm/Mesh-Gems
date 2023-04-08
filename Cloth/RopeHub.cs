@@ -6,12 +6,9 @@ using Mg.Cloth;
 public class RopeHub : MonoBehaviour
 {
     public RopeAttribute[] attributes;
-
     public Rope[] links;
     public ConstrainPair[] constrainPairs;  //如果costrain-pair 有重复-冲突，自己负责，代码不检查
     public LayerMask physicsLayer;
-    //用于在 Editor里动态刷新 两根曲线的参数效果
-    public bool refreshParameters = false;
     ClothConstrain[] constrains;
     int countCP=0;
     void Start()
@@ -26,7 +23,7 @@ public class RopeHub : MonoBehaviour
         for (int i = 0; i < links.Length; i++)
         {
             int idx = Mathf.Clamp(links[i].attributeIdx, 0, attributes.Length - 1);
-            links[i].InitRuntime(attributes[idx], physicsLayer,null);
+            links[i].InitRuntime(attributes[idx], physicsLayer);
         }
         if (constrainPairs != null)
         {
@@ -54,16 +51,6 @@ public class RopeHub : MonoBehaviour
 
     void Update()
     {
-#if UNITY_EDITOR
-        if (refreshParameters)
-        {
-            for (int i = 0; i < links.Length; i++)
-            {
-                int idx = Mathf.Clamp(links[i].attributeIdx, 0, attributes.Length - 1);
-                links[i].Refresh_Damp_Bend(attributes[idx]);
-            }
-        }
-#endif
         for (int i = 0; i < links.Length; i++)
         {
             links[i].ClearConstrains();
@@ -96,7 +83,6 @@ public class RopeHub : MonoBehaviour
                     att.damping = 0.1f;
                     att.bendDegree = 80;
                     att.adjacentDegree = 90;
-                    att.radius = 0.3f;
                     att.physicsRadius = 0.5f;
                 }
             }
@@ -109,7 +95,7 @@ public class RopeHub : MonoBehaviour
         for (int i = 0; i < links.Length; i++)
         {
             int idx = Mathf.Clamp(links[i].attributeIdx, 0, attributes.Length - 1);
-            links[i].OnDrawGizoms(attributes[idx],null);
+            links[i].OnDrawGizoms(attributes[idx]);
         }
     }
 #endif

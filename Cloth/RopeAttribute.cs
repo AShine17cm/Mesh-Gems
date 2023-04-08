@@ -16,7 +16,6 @@ namespace Mg.Cloth
 
         [Range(0.01f, 10)] public float timeScale = 1f;
         public float gravity = 10f;
-        public float radius = 0.3f;
         public float physicsRadius = 0.5f;      //物理碰撞半径
         public float physicsStasis = 1f;        //物理停滞时间
 

@@ -408,7 +408,6 @@ MonoBehaviour:
   physicsLayer:
     serializedVersion: 2
     m_Bits: 1
-  refreshParameters: 0
 --- !u!1 &595721367
 GameObject:
   m_ObjectHideFlags: 0
@@ -1046,6 +1045,110 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1910836301}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1001 &2036093278
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 6598933593119696866, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696866, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1.63
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696866, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.33
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696866, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696866, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696866, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696866, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696866, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696866, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696866, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696866, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696876, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: m_Name
+      value: ex_tail_1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: attributes.Array.data[0].adjacentDegree
+      value: 80
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: attributes.Array.data[0].adjacentCurve.m_Curve.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: attributes.Array.data[0].adjacentCurve.m_Curve.Array.data[1].time
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: attributes.Array.data[0].adjacentCurve.m_Curve.Array.data[0].value
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: attributes.Array.data[0].adjacentCurve.m_Curve.Array.data[1].value
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: attributes.Array.data[0].adjacentCurve.m_Curve.Array.data[0].tangentMode
+      value: 34
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: attributes.Array.data[0].adjacentCurve.m_Curve.Array.data[1].tangentMode
+      value: 34
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 35b5986369d2e5644961ed8314400926, type: 3}
 --- !u!1 &2084288482
 GameObject:
   m_ObjectHideFlags: 0

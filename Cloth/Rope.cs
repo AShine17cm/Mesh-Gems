@@ -21,7 +21,6 @@ namespace Mg.Cloth
 
         protected float timeScale = 1f;
         protected float gravity = 10f;
-        //protected float radius = 0.3f;
         protected float physicsRadius = 0.5f;      //物理碰撞半径
         protected float stasis = 1f;
 
@@ -44,29 +43,7 @@ namespace Mg.Cloth
         protected int countNode;
         protected LayerMask mask;
 
-#if UNITY_EDITOR
-        /* 用于在Editor里 更新 Damp 和 Bend */
-        public virtual void Refresh_Damp_Bend(RopeAttribute att)
-        {
-            timeScale = att.timeScale;
-            gravity = att.gravity;
-            //radius = att.radius;
-            physicsRadius = att.physicsRadius;
-            stasis = att.physicsStasis;
-            float step = 1f / (countNode - 1);
-            float t;
-            for (int i = 1; i < countNode; i++)
-            {
-                t = step * i;
-                damps[i] = (att.damping * 0.1f) * att.dampCurve.Evaluate(t);
-
-                float bendRad = att.bendDegree * att.bendCurve.Evaluate(t);
-                bendCoss[i] = Mathf.Cos(Mathf.Deg2Rad * bendRad);
-                bendSins[i] = Mathf.Sin(Mathf.Deg2Rad * bendRad);
-            }
-        }
-#endif
-        public virtual void InitRuntime(RopeAttribute att, LayerMask mask, Rope constrainPair)
+        public virtual void InitRuntime(RopeAttribute att, LayerMask mask)
         {
             lastTick = 0.1f;
             timeScale = att.timeScale;
@@ -142,7 +119,7 @@ namespace Mg.Cloth
         /* World Space
          * dirForce:    可以 local+World重力 混合
          */
-        public void Refresh(Vector3 dirForce, float tick)
+        public virtual void Refresh(Vector3 dirForce, float tick)
         {
             tick *= timeScale;
             Vector3 pos = pivot.position;
@@ -281,19 +258,10 @@ namespace Mg.Cloth
             }
         }
 #if UNITY_EDITOR
-        public void OnDrawGizoms(RopeAttribute att, Rope pair)
+        public virtual void OnDrawGizoms(RopeAttribute att)
         {
             if (pivot == null) return;
             Color line = new Color(1, 0, 0, 0.7f);
-            Color sphere = new Color(0.6f, 0.6f, 0.6f, 0.5f);
-            Color constrain = new Color(0, 1, 1, 0.5f);
-
-            Transform testPair = null;
-            if (pair != null)
-            {
-                testPair = pair.pivot;
-            }
-
             Transform testTr = pivot;
             while (testTr.childCount > 0)
             {
@@ -303,28 +271,7 @@ namespace Mg.Cloth
 
                 Gizmos.color = line;
                 Gizmos.DrawLine(p1, p0);
-                //Gizmos.color = sphere;
-                //Gizmos.DrawWireSphere(p1, att.physicsRadius);
-                //平行约束
-                if (testPair != null)
-                {
-                    Gizmos.color = constrain;
-                    Vector3 pPair = testPair.position;
-                    Gizmos.DrawLine(p0, p0 + (p0 - pPair).normalized * att.physicsRadius);
-                    if (testPair.childCount > 0)
-                        testPair = testPair.GetChild(0);
-                    else
-                        testPair = null;
-                }
                 testTr = tmp;
-
-            }
-            if (testPair != null)
-            {
-                Gizmos.color = constrain;
-                Vector3 p0 = testTr.position;
-                Vector3 pPair = testPair.position;
-                Gizmos.DrawLine(p0, p0 + (p0 - pPair).normalized * att.physicsRadius);
             }
         }
 #endif

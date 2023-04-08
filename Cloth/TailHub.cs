@@ -6,17 +6,16 @@ using Mg.Cloth;
 public class TailHub : MonoBehaviour
 {
     public TailAttribute[] attributes;
-
     public Tail[] links;
+    public ConstrainPair[] constrainPairs;  //如果costrain-pair 有重复-冲突，自己负责，代码不检查
     public LayerMask physicsLayer;
-    //用于在 Editor里动态刷新 两根曲线的参数效果
-    public bool refreshParameters = false;
-
+    ClothConstrain[] constrains;
+    int countCP = 0;
     void Start()
     {
         for (int i = 0; i < attributes.Length; i++)
         {
-            TailAttribute att = attributes[i];
+            RopeAttribute att = attributes[i];
             att.timeScale = Mathf.Max(att.timeScale, 0.001f);
             att.bendDegree = Mathf.Clamp(att.bendDegree, 10, 359);
         }
@@ -24,28 +23,43 @@ public class TailHub : MonoBehaviour
         for (int i = 0; i < links.Length; i++)
         {
             int idx = Mathf.Clamp(links[i].attributeIdx, 0, attributes.Length - 1);
-            int pairIdx = links[i].pairIdx;
-            Tail pair = null;
-            if (pairIdx > 0 && pairIdx < links.Length)
+            links[i].InitRuntime(attributes[idx], physicsLayer);
+        }
+        if (constrainPairs != null)
+        {
+            /* 为了代码的简洁，没有检查重复的约束 */
+            countCP = constrainPairs.Length;
+            constrains = new ClothConstrain[countCP];
+            int counLink = links.Length;
+            for (int i = 0; i < countCP; i++)
             {
-                pair = links[pairIdx];
+                ConstrainPair cp = constrainPairs[i];
+                if (cp.IsLegal(counLink))
+                {
+                    Rope main = links[cp.main];
+                    Rope vice = links[cp.vice];
+                    /* 节点数量不一致，也可以做，但是这里不做 */
+                    if (main.Count == vice.Count)
+                    {
+                        ClothConstrain cc = new ClothConstrain(main, vice, cp.elastic, cp.areaMin);
+                        constrains[i] = cc;
+                    }
+                }
             }
-            links[i].InitRuntime(attributes[idx], physicsLayer,pair);
         }
     }
 
     void Update()
     {
-#if UNITY_EDITOR
-        if (refreshParameters)
+        for (int i = 0; i < links.Length; i++)
         {
-            for (int i = 0; i < links.Length; i++)
-            {
-                int idx = Mathf.Clamp(links[i].attributeIdx, 0, attributes.Length - 1);
-                links[i].Refresh_Damp_Bend(attributes[idx]);
-            }
+            links[i].ClearConstrains();
         }
-#endif
+        /* 先行计算平行约束，防止跨帧的 tick误差,( 也可以自行计算tick，控制验算时机/频率) */
+        for (int i = 0; i < countCP; i++)
+        {
+            constrains[i]?.Simulate(Time.deltaTime);//相关位置可能不合法，为null
+        }
         for (int i = 0; i < links.Length; i++)
         {
             links[i].Refresh(Vector3.down, Time.deltaTime);
@@ -63,15 +77,16 @@ public class TailHub : MonoBehaviour
                 {
                     att.dampCurve = AnimationCurve.Constant(0, 1, 1.0f);
                     att.bendCurve = AnimationCurve.Constant(0, 1, 1.0f);
-                    att.stiffCurve = AnimationCurve.Constant(0, 1, 1.0f);
-
-                    att.damping = 0.1f;
-                    att.bendDegree = 80;
-                    att.stiffness = 1.0f;
+                    att.adjacentCurve = AnimationCurve.Constant(0, 1, 1.0f);
                     att.timeScale = 1f;
                     att.gravity = 10f;
-                    att.radius = 0.3f;
+                    att.damping = 0.1f;
+                    att.bendDegree = 80;
+                    att.adjacentDegree = 90;
                     att.physicsRadius = 0.5f;
+
+                    att.stiffCurve = AnimationCurve.Constant(0, 1, 1.0f);
+                    att.stiffness = 5.0f;
                 }
             }
         }
@@ -83,13 +98,7 @@ public class TailHub : MonoBehaviour
         for (int i = 0; i < links.Length; i++)
         {
             int idx = Mathf.Clamp(links[i].attributeIdx, 0, attributes.Length - 1);
-            int pairIdx = links[i].pairIdx;
-            Tail pair = null;
-            if (pairIdx > 0 && pairIdx < links.Length)
-            {
-                pair = links[pairIdx];
-            }
-            links[i].OnDrawGizoms(attributes[idx],pair);
+            links[i].OnDrawGizoms(attributes[idx]);
         }
     }
 #endif
