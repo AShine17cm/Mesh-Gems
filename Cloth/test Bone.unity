@@ -411,7 +411,6 @@ MonoBehaviour:
     bendDegree: 80
     adjacentDegree: 90
     damping: 0.05
-    timeScale: 1
     gravity: 10
     physicsRadius: 0.5
     physicsStasis: 1
@@ -423,6 +422,7 @@ MonoBehaviour:
   physicsLayer:
     serializedVersion: 2
     m_Bits: 1
+  timeScale: 1
   teleportVault: 10
   maxFrameRate: 60
 --- !u!1 &595721367

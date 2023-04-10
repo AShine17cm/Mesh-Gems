@@ -11,7 +11,7 @@ namespace Mg.Cloth
         public float radius = 1f;
         public float strength = 1f;
     }
-    public class SphereConstrain : MonoBehaviour, IConstrainGeo
+    public class ConstrainSphere : MonoBehaviour, IConstrainGeo
     {
         public List<Sphere> spheres;
         /* 插入量，没有加权tick */
@@ -47,4 +47,5 @@ namespace Mg.Cloth
             }
         }
     }
+
 }
