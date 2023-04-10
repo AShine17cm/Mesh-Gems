@@ -13,6 +13,7 @@ public class TailHub : MonoBehaviour
     public int maxFrameRate = 100;
 
     ClothConstrain[] constrains;
+    IConstrainGeo[] geos;
     int countCP = 0;
 
     float tick;
@@ -25,11 +26,11 @@ public class TailHub : MonoBehaviour
         lastPos = tr.position;
         tick = 1f / Mathf.Max(1, maxFrameRate);
         timer = 0;
+        geos = GetComponentsInChildren<IConstrainGeo>();
 
         for (int i = 0; i < attributes.Length; i++)
         {
             RopeAttribute att = attributes[i];
-            att.timeScale = Mathf.Max(att.timeScale, 0.001f);
             att.bendDegree = Mathf.Clamp(att.bendDegree, 10, 359);
         }
         /* 初始化 单轴 */
@@ -88,6 +89,17 @@ public class TailHub : MonoBehaviour
         {
             links[i].ClearConstrains();
         }
+        /* 自定义的形体约束，比如球体 */
+        if (null != geos)
+        {
+            for (int g = 0; g < geos.Length; g++)
+            {
+                for (int r = 0; r < links.Length; r++)
+                {
+                    geos[g].TestIntersect(links[r], tick);
+                }
+            }
+        }
         /* 先行计算平行约束，防止跨帧的 tick误差,( 也可以自行计算tick，控制验算时机/频率) */
         for (int i = 0; i < countCP; i++)
         {
@@ -111,7 +123,6 @@ public class TailHub : MonoBehaviour
                     att.dampCurve = AnimationCurve.Constant(0, 1, 1.0f);
                     att.bendCurve = AnimationCurve.Constant(0, 1, 1.0f);
                     att.adjacentCurve = AnimationCurve.Constant(0, 1, 1.0f);
-                    att.timeScale = 1f;
                     att.gravity = 10f;
                     att.damping = 0.1f;
                     att.bendDegree = 80;

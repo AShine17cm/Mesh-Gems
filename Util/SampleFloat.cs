@@ -23,6 +23,15 @@
             samples[idx] = newSample;
             idx = (idx + 1) % count;
         }
+        public void Offset(float offset)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                samples[i] += offset;
+            }
+            sum = sum + offset * count;
+            ValNew += offset;
+        }
         public void Reset(float bySample)
         {
             idx = 0;

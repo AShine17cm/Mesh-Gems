@@ -170,8 +170,8 @@ namespace Mg.Cloth
 
                 //elasticA = elasticVice = Vector3.zero;
                 /* 扭曲钳制 和 弹性伸缩 */
-                a.Forces[i] += (elasticA * tick + delta_aa);
-                vice.Forces[i] += (elasticVice * tick + delta_vv);
+                a.Constrains[i] += (elasticA * tick + delta_aa);
+                vice.Constrains[i] += (elasticVice * tick + delta_vv);
             }
         }
         //public void SimulateX(float tick)

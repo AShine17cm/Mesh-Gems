@@ -20,7 +20,6 @@ namespace Mg.Cloth
         public int attributeIdx = 0;
         public bool physics = false;
 
-        protected float timeScale = 1f;
         protected float gravity = 10f;
         protected float physicsRadius = 0.5f;      //物理碰撞半径
         protected float stasis = 1f;
@@ -40,16 +39,12 @@ namespace Mg.Cloth
         protected Vector3[] constrains;
         protected float[] nodesTouch;              //在物理表面上, 计时长度
 
-        protected float lastTick;
         protected int countNode;
         protected LayerMask mask;
 
         public virtual void InitRuntime(RopeAttribute att, LayerMask mask)
         {
-            lastTick = 0.1f;
-            timeScale = att.timeScale;
             gravity = att.gravity;
-            //radius = att.radius;
             physicsRadius = att.physicsRadius;
             stasis = att.physicsStasis;
 
@@ -122,11 +117,11 @@ namespace Mg.Cloth
          */
         public virtual void Refresh(Vector3 dirForce, float tick)
         {
-            tick *= timeScale;
             Vector3 pos = pivot.position;
             /* 保存前一帧的数据 */
             Array.Copy(nodes, nodesTmp, countNode);
             nodes[0] = pos;
+
             Simulate(dirForce, tick);
             //检测物理碰撞<Head-Tail> 和 末端的
             if (physics)
@@ -144,7 +139,6 @@ namespace Mg.Cloth
             }
             /* 保存前一帧的数据 */
             Array.Copy(nodesTmp, nodesOld, countNode);
-            lastTick = tick;
         }
         /* 做一次模拟运算 */
         public virtual void Simulate(Vector3 dirForce, float tick)
@@ -180,8 +174,8 @@ namespace Mg.Cloth
                 Vector3 tanForce = Vector3.Cross(planarVec, axis).normalized;
 
                 vecOld = pos - nodesOld[i];
-                /* 合成速度 */
-                Vector3 deltaMv = vecOld / lastTick * tick + (tanForce * deltaSpd * tick * 0.5f);
+                /* 合成速度, Hub传入的tick固定 */
+                Vector3 deltaMv = vecOld  + (tanForce * deltaSpd * tick * 0.5f);
 
                 float mag = deltaMv.magnitude;
                 float damp = 1 - Mathf.Clamp(damps[i] * mag / tick, 0, 0.9999f);//防止出现负值

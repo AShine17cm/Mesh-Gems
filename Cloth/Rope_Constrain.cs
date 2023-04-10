@@ -11,7 +11,7 @@ namespace Mg.Cloth
         {
             get { return countNode; }
         }
-        public Vector3[] Forces
+        public Vector3[] Constrains
         {
             get { return constrains; }
         }

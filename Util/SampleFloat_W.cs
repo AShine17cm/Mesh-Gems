@@ -52,6 +52,14 @@ namespace Mg.Util
             }
             ValNew = sum / totalWeight;
         }
+        public void Offset(float offset)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                samples[i] += offset;
+            }
+            ValNew += offset;
+        }
         public void Reset(float bySample)
         {
             idx = 0;

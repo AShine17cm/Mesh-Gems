@@ -65,8 +65,8 @@ namespace Mg.Cloth
                 Vector3 tanForce = Vector3.Cross(planarVec, axis).normalized;
 
                 vecOld = pos - nodesOld[i];
-                /* 合成速度 */
-                Vector3 deltaMv = vecOld / lastTick * tick + (tanForce * deltaSpd * tick * 0.5f);
+                /* 合成速度, Hub传入的tick固定 */
+                Vector3 deltaMv = vecOld  + (tanForce * deltaSpd * tick * 0.5f);
 
                 float mag = deltaMv.magnitude;
                 float damp = 1 - Mathf.Clamp(damps[i] * mag / tick, 0, 0.9999f);//防止出现负值
