@@ -403,10 +403,13 @@ MonoBehaviour:
   links:
   - pivot: {fileID: 434828097}
     attributeIdx: 0
+    physics: 0
   constrainPairs: []
   physicsLayer:
     serializedVersion: 2
     m_Bits: 1
+  teleportVault: 10
+  maxFrameRate: 60
 --- !u!1 &595721367
 GameObject:
   m_ObjectHideFlags: 0
@@ -1110,6 +1113,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: ex_tail_1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6598933593119696877, guid: 35b5986369d2e5644961ed8314400926,
+        type: 3}
+      propertyPath: maxFrameRate
+      value: 90
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 35b5986369d2e5644961ed8314400926, type: 3}

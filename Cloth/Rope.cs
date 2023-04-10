@@ -18,6 +18,7 @@ namespace Mg.Cloth
     {
         public Transform pivot;
         public int attributeIdx = 0;
+        public bool physics = false;
 
         protected float timeScale = 1f;
         protected float gravity = 10f;
@@ -128,10 +129,13 @@ namespace Mg.Cloth
             nodes[0] = pos;
             Simulate(dirForce, tick);
             //检测物理碰撞<Head-Tail> 和 末端的
-            Vector3 tail = nodes[countNode - 1];
-            if (Physics.Linecast(pos, tail, mask) || Physics.Linecast(tail, tail + Vector3.down * physicsRadius))
+            if (physics)
             {
-                SimulatePhysics();
+                Vector3 tail = nodes[countNode - 1];
+                if (Physics.Linecast(pos, tail, mask) || Physics.Linecast(tail, tail + Vector3.down * physicsRadius))
+                {
+                    SimulatePhysics();
+                }
             }
             /* 应用计算结果 到骨骼节点 */
             for (int i = 1; i < countNode; i++)
@@ -255,6 +259,15 @@ namespace Mg.Cloth
                 //cpPos = nodes[i - 1] + virDir * dists[i];                       //距离钳制的 临时位置
                 //nodes[i] = cpPos;   //最终的位置
                 nodes[i] = virPos;
+            }
+        }
+        /* 瞬移 */
+        public void Teleport(Vector3 delta)
+        {
+            for(int i = 0; i < countNode; i++)
+            {
+                nodes[i] += delta;
+                nodesOld[i] += delta;
             }
         }
 #if UNITY_EDITOR

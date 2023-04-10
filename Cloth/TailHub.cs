@@ -9,10 +9,23 @@ public class TailHub : MonoBehaviour
     public Tail[] links;
     public ConstrainPair[] constrainPairs;  //如果costrain-pair 有重复-冲突，自己负责，代码不检查
     public LayerMask physicsLayer;
+    public float teleportVault = 10f;       //瞬移?
+    public int maxFrameRate = 100;
+
     ClothConstrain[] constrains;
     int countCP = 0;
+
+    float tick;
+    float timer;
+    Transform tr;
+    Vector3 lastPos;
     void Start()
     {
+        tr = transform;
+        lastPos = tr.position;
+        tick = 1f / Mathf.Max(1, maxFrameRate);
+        timer = 0;
+
         for (int i = 0; i < attributes.Length; i++)
         {
             RopeAttribute att = attributes[i];
@@ -51,6 +64,26 @@ public class TailHub : MonoBehaviour
 
     void Update()
     {
+        /* 检查瞬移 */
+        Vector3 pos = tr.position;
+        if ((pos - lastPos).sqrMagnitude > teleportVault)
+        {
+            lastPos = pos;
+            Vector3 delta = pos - lastPos;
+            timer = 0;
+            for (int i = 0; i < links.Length; i++)
+            {
+                links[i].Teleport(delta);
+            }
+        }
+        /* 更新频率,不追帧 */
+        timer += Time.deltaTime;
+        if (timer < tick)
+        {
+            return;
+        }
+        timer = Mathf.Min(timer - tick, tick);
+
         for (int i = 0; i < links.Length; i++)
         {
             links[i].ClearConstrains();

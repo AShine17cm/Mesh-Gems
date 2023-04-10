@@ -9,10 +9,22 @@ public class RopeHub : MonoBehaviour
     public Rope[] links;
     public ConstrainPair[] constrainPairs;  //如果costrain-pair 有重复-冲突，自己负责，代码不检查
     public LayerMask physicsLayer;
+    public float teleportVault = 10f;       //瞬移?
+    public int maxFrameRate = 100;
     ClothConstrain[] constrains;
-    int countCP=0;
+    int countCP = 0;
+
+    float tick;
+    float timer;
+    Transform tr;
+    Vector3 lastPos;
     void Start()
     {
+        tr = transform;
+        lastPos = tr.position;
+        tick = 1f / Mathf.Max(1, maxFrameRate);
+        timer = 0;
+
         for (int i = 0; i < attributes.Length; i++)
         {
             RopeAttribute att = attributes[i];
@@ -31,7 +43,7 @@ public class RopeHub : MonoBehaviour
             countCP = constrainPairs.Length;
             constrains = new ClothConstrain[countCP];
             int counLink = links.Length;
-            for(int i = 0; i < countCP; i++)
+            for (int i = 0; i < countCP; i++)
             {
                 ConstrainPair cp = constrainPairs[i];
                 if (cp.IsLegal(counLink))
@@ -51,6 +63,26 @@ public class RopeHub : MonoBehaviour
 
     void Update()
     {
+        /* 检查瞬移 */
+        Vector3 pos = tr.position;
+        if ((pos - lastPos).sqrMagnitude > teleportVault)
+        {
+            lastPos = pos;
+            Vector3 delta = pos - lastPos;
+            timer = 0;
+            for (int i = 0; i < links.Length; i++)
+            {
+                links[i].Teleport(delta);
+            }
+        }
+        /* 更新频率,不追帧 */
+        timer += Time.deltaTime;
+        if (timer < tick)
+        {
+            return;
+        }
+        timer = Mathf.Min(timer - tick, tick);
+
         for (int i = 0; i < links.Length; i++)
         {
             links[i].ClearConstrains();
@@ -58,11 +90,12 @@ public class RopeHub : MonoBehaviour
         /* 先行计算平行约束，防止跨帧的 tick误差,( 也可以自行计算tick，控制验算时机/频率) */
         for (int i = 0; i < countCP; i++)
         {
-            constrains[i]?.Simulate(Time.deltaTime);//相关位置可能不合法，为null
+            constrains[i]?.Simulate(tick);//相关位置可能不合法，为null
         }
+
         for (int i = 0; i < links.Length; i++)
         {
-            links[i].Refresh(Vector3.down, Time.deltaTime);
+            links[i].Refresh(Vector3.down, tick);
         }
     }
 #if UNITY_EDITOR
