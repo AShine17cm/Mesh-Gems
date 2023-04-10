@@ -3,19 +3,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-
-[CustomEditor(typeof(TailHub))]
-public class TailHub_Editor : Editor
+namespace Mg.Cloth
 {
-    TailHub hub;
-    private void OnEnable()
+
+    [CustomEditor(typeof(TailHub))]
+    public class TailHub_Editor : Editor
     {
-        hub = target as TailHub;
-    }
-    /* 用于初始化一些 曲线，参数值 */
-    public override bool RequiresConstantRepaint()
-    {
-        hub.InitEditor();
-        return base.RequiresConstantRepaint();
+        TailHub hub;
+        private void OnEnable()
+        {
+            hub = target as TailHub;
+        }
+        /* 用于初始化一些 曲线，参数值 */
+        public override bool RequiresConstantRepaint()
+        {
+            hub.InitEditor();
+            return base.RequiresConstantRepaint();
+        }
     }
 }
