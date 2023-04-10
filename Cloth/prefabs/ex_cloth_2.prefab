@@ -521,14 +521,15 @@ MonoBehaviour:
     damping: 0.05
     timeScale: 1
     gravity: 10
-    radius: 0.3
     physicsRadius: 0.5
     physicsStasis: 1
   links:
   - pivot: {fileID: 5385956228755375910}
     attributeIdx: 0
-    pairIdx: -1
+    physics: 0
+  constrainPairs: []
   physicsLayer:
     serializedVersion: 2
     m_Bits: 1
-  refreshParameters: 0
+  teleportVault: 5
+  maxFrameRate: 100

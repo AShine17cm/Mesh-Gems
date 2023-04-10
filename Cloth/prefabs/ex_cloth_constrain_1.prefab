@@ -603,16 +603,18 @@ MonoBehaviour:
     damping: 0.05
     timeScale: 1
     gravity: 10
-    radius: 0.4
     physicsRadius: 0.5
     physicsStasis: 1
   links:
   - pivot: {fileID: 4997866753626645219}
     attributeIdx: 0
+    physics: 0
   - pivot: {fileID: 4997866755094737573}
     attributeIdx: 0
+    physics: 0
   - pivot: {fileID: 4997866753640955086}
     attributeIdx: 0
+    physics: 0
   constrainPairs:
   - main: 0
     vice: 1
@@ -625,7 +627,8 @@ MonoBehaviour:
   physicsLayer:
     serializedVersion: 2
     m_Bits: 1
-  refreshParameters: 0
+  teleportVault: 5
+  maxFrameRate: 100
 --- !u!1 &4997866753626645218
 GameObject:
   m_ObjectHideFlags: 0

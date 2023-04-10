@@ -131,17 +131,18 @@ MonoBehaviour:
     damping: 0.2
     timeScale: 1
     gravity: 30
-    radius: 0.3
     physicsRadius: 0.5
     physicsStasis: 1
   links:
   - pivot: {fileID: 3061729707950318555}
     attributeIdx: 0
-    pairIdx: -1
+    physics: 0
+  constrainPairs: []
   physicsLayer:
     serializedVersion: 2
     m_Bits: 1
-  refreshParameters: 0
+  teleportVault: 5
+  maxFrameRate: 100
 --- !u!1 &3061729708045561786
 GameObject:
   m_ObjectHideFlags: 0

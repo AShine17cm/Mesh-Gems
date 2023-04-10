@@ -565,10 +565,13 @@ MonoBehaviour:
   links:
   - pivot: {fileID: 6598933593218695466}
     attributeIdx: 0
+    physics: 0
   constrainPairs: []
   physicsLayer:
     serializedVersion: 2
     m_Bits: 1
+  teleportVault: 5
+  maxFrameRate: 100
 --- !u!1 &6598933593123673362
 GameObject:
   m_ObjectHideFlags: 0
