@@ -19,6 +19,7 @@ namespace Mg.Cloth
         public Transform pivot;
         public int attributeIdx = 0;
         public bool physics = false;
+        public bool rotations = true;
 
         protected float gravity = 10f;
         protected float physicsRadius = 0.5f;      //物理碰撞半径
@@ -33,6 +34,7 @@ namespace Mg.Cloth
 
         protected Transform[] bones;
         protected Vector3[] initDirs;             //初始轴向 local-space
+        protected Quaternion[] initRotations;
         protected Vector3[] nodes;                //节点-位置
         protected Vector3[] nodesOld;
         protected Vector3[] nodesTmp;
@@ -69,6 +71,7 @@ namespace Mg.Cloth
             nodesOld = new Vector3[countNode];
             nodesTmp = new Vector3[countNode];
             initDirs = new Vector3[countNode];
+            initRotations = new Quaternion[countNode];
             constrains = new Vector3[countNode];
             nodesTouch = new float[countNode];
 
@@ -76,6 +79,7 @@ namespace Mg.Cloth
             nodes[0] = pivot.position;
             nodesOld[0] = nodes[0];
             initDirs[0] = Vector3.zero;
+            initRotations[0] = Quaternion.identity;
             nodesTouch[0] = 0;
             dists[0] = 0;
             damps[0] = 0;
@@ -94,6 +98,7 @@ namespace Mg.Cloth
                 nodesOld[i] = nodes[i];
                 dists[i] = (nodes[i] - bones[i - 1].position).magnitude;    //某个节点可能会有缩放，所以在world-space中计算
                 initDirs[i] = bones[i].localPosition.normalized;                //初始轴向-local
+                initRotations[i] = bones[i].localRotation;
                 damps[i] = (att.damping * 0.1f) * att.dampCurve.Evaluate(t);
                 nodesTouch[i] = 0;
 
@@ -137,6 +142,21 @@ namespace Mg.Cloth
             {
                 bones[i].position = nodes[i];
             }
+            /* 保持节点之间的相对旋转 */
+            if (rotations)
+            {
+                for(int i = 1; i < countNode; i++)
+                {
+                    Vector3 localPos = bones[i].localPosition;
+                    Quaternion rot = Quaternion.FromToRotation(initDirs[i], localPos.normalized);
+                    bones[i].localRotation = initRotations[i] * rot;
+                }
+                for (int i = 1; i < countNode; i++)
+                {
+                    bones[i].position = nodes[i];
+                }
+            }
+
             /* 保存前一帧的数据 */
             Array.Copy(nodesTmp, nodesOld, countNode);
         }
