@@ -20,6 +20,7 @@ namespace Mg.Cloth
         public int attributeIdx = 0;
         public bool physics = false;
         public bool rotations = true;
+        private Transform trP;                  //pivot的父节点
 
         protected float gravity = 10f;
         protected float physicsRadius = 0.5f;      //物理碰撞半径
@@ -52,6 +53,7 @@ namespace Mg.Cloth
 
             this.mask = mask;
             countNode = 1;
+            trP = pivot.parent;
             Transform testTr = pivot;
             while (testTr.childCount > 0)
             {
@@ -78,8 +80,11 @@ namespace Mg.Cloth
             bones[0] = pivot;   //第一个节点
             nodes[0] = pivot.position;
             nodesOld[0] = nodes[0];
-            initDirs[0] = Vector3.zero;
-            initRotations[0] = Quaternion.identity;
+            if (null != trP)//中途变换父节点？
+            {
+                initDirs[0] = bones[0].localPosition.normalized;
+                initRotations[0] = bones[0].localRotation;
+            }
             nodesTouch[0] = 0;
             dists[0] = 0;
             damps[0] = 0;
@@ -145,12 +150,22 @@ namespace Mg.Cloth
             /* 保持节点之间的相对旋转 */
             if (rotations)
             {
-                for(int i = 1; i < countNode; i++)
+                Vector3 localPos;
+                Quaternion rot;
+                if (null != trP && !trP.Equals(null))
                 {
-                    Vector3 localPos = bones[i].localPosition;
-                    Quaternion rot = Quaternion.FromToRotation(initDirs[i], localPos.normalized);
+                    localPos = bones[0].localPosition;
+                    rot = Quaternion.FromToRotation(initDirs[0], localPos.normalized);
+                    bones[0].localRotation = initRotations[0] * rot;
+                }
+
+                for (int i = 1; i < countNode; i++)
+                {
+                    localPos = bones[i].localPosition;
+                    rot = Quaternion.FromToRotation(initDirs[i], localPos.normalized);
                     bones[i].localRotation = initRotations[i] * rot;
                 }
+
                 for (int i = 1; i < countNode; i++)
                 {
                     bones[i].position = nodes[i];
